@@ -1,0 +1,43 @@
+---
+import { supabase } from '../lib/supbaseClient';
+
+// Check authentication
+const { data: { session } } = await supabase.auth.getSession();
+
+if (!session) {
+    return Astro.redirect('/login');
+}
+
+// Fetch notes
+const { data: notes } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false });
+---
+
+<body>
+    <div>
+        <h1>Your Notes</h1>
+        
+        <p>Logged in as: {session.user.email}</p>
+
+        <ul>
+            {notes?.map((note) => (
+                <li>
+                    <h3>{note.title}</h3>
+                    <p>{note.content}</p>
+                    <small>{new Date(note.created_at).toLocaleString()}</small>
+                </li>
+            ))}
+        </ul>
+
+        <form id="add-note-form">
+            <input type="text" id="title" placeholder="Note title" required />
+            <textarea id="content" placeholder="Note content" required></textarea>
+            <button type="submit">Add Note</button>
+        </form>
+    </div>
+
+    <script src="../scripts/notes.ts"></script>
+</body>
